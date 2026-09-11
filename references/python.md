@@ -33,6 +33,18 @@ mpl.rcParams.update({
 
 中文字型如果缺,先 `apt-get install -y fonts-noto-cjk`,再 `mpl.font_manager._load_fontmanager(try_read_cache=False)`。裝不起來就退回英文標籤,不要讓圖上出現豆腐方塊。
 
+## 補齊時間軸時不要順手補 0
+
+`reindex(full_range, fill_value=0)` 會把「沒有資料」變成「值是 0」,平均數和總數跟著被污染。先分清楚兩者:
+
+```python
+s = raw.reindex(full_range)              # 缺的地方留 NaN,不要 fill_value=0
+真的是零 = s.fillna(0)                    # 確認過該期有在運作、只是沒交易,才補 0
+ax.plot(s.index, s.values)               # 折線遇到 NaN 會自然斷開,這是對的
+```
+
+長條圖畫 NaN 會是空缺(正確),畫 0 會是一根貼地的短棒(看起來像「有在跑只是很低」)。分不清楚就在圖下方寫一句說明。
+
 ## 常用尺寸
 
 | 用途 | figsize |
@@ -41,7 +53,7 @@ mpl.rcParams.update({
 | 並排輔圖 | `(5.5, 3.5)` |
 | 橫向長條(依類別數) | `(8, 0.4 * n + 1.2)` |
 
-## 兩個常用樣板
+## 三個常用樣板
 
 **橫向長條(排序 + 強調第一名)**
 
@@ -72,6 +84,27 @@ ax.set_ylim(bottom=0)                             # 折線可不從 0,但要刻�
 ax.yaxis.set_major_formatter(lambda v, p: f'{v:,.0f}')
 ax.margins(x=.14)                                 # 留空間給末端標註
 ```
+
+**small multiples(超過 4 條線就改用這個)**
+
+```python
+n = len(groups)
+ncol = min(4, n); nrow = -(-n // ncol)
+fig, axes = plt.subplots(nrow, ncol, figsize=(3*ncol, 2.2*nrow),
+                         sharex=True, sharey=True)      # sharey 是重點,不能省
+ymax = max(s.max() for s in groups.values()) * 1.1      # 全體共用刻度
+
+for ax, (name, s) in zip(axes.flat, groups.items()):
+    ax.plot(s.index, s.values, lw=1.8, color=PALETTE[0])
+    ax.set_title(name, fontsize=11, color=MUTED, pad=6)
+    ax.set_ylim(0, ymax)
+    ax.xaxis.grid(False)
+for ax in axes.flat[n:]:
+    ax.set_visible(False)                               # 多出來的格子藏掉
+fig.suptitle('六個站點裡只有南港在成長', x=.06, ha='left', fontsize=14, fontweight='600')
+```
+
+要凸顯其中一個就把它上 `PALETTE[0]`、其餘 `DIM`,並在每張小圖畫一條全體平均的灰虛線當共同基準。
 
 ## 多圖拼成一張儀表板
 

@@ -10,12 +10,15 @@
 - 固定版型:標題 → KPI 卡 → 主圖 → 雙欄輔圖 → 明細表
 - 選圖邏輯表:先問「這張圖要回答什麼問題」,再對應圖表類型
 - 呈現規則:長條一律排序、y 軸從 0、不用雙 Y 軸、標題寫結論句
+- KPI 一定要有比較基準,**但沒有基準時留白,不准編一個**
+
+規則背後還放了一組**判斷基準**(誠實 > 感知準確度 > 前注意處理 > 精簡 > 敘事),用途是遇到規則表沒寫到的狀況時有得裁決,而且衝突時知道誰讓誰。來源是 Cleveland & McGill 的感知精度排序、完形法則、Tufte 的 lie factor 與 data-ink、Cairo 與 Knaflic 的敘事、Few 的儀表板主張。
 
 ## 結構
 
 ```
 dashboard/
-├── SKILL.md              # 配色 / 版型 / 選圖邏輯 / 呈現規則(觸發時載入)
+├── SKILL.md              # 判斷基準 / 配色 / 版型 / 選圖邏輯 / 呈現規則(觸發時載入)
 └── references/
     ├── html.md           # HTML 輸出:CSS tokens、結構、Chart.js 設定
     └── python.md         # 靜態出圖:matplotlib rcParams、常用樣板

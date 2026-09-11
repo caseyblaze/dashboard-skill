@@ -27,10 +27,13 @@ h1{font-size:20px;font-weight:600;margin:0 0 4px}
 .card .label{font-size:13px;color:var(--muted);margin-bottom:6px}
 .card .value{font-size:28px;font-weight:600;letter-spacing:-.02em}
 .card .delta{font-size:13px;margin-top:6px}
-.up{color:var(--pos)} .down{color:var(--neg)}
+.up{color:var(--pos)} .down{color:var(--neg)} .flat{color:var(--muted)}
 .panel{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:24px}
 .panel h2{font-size:15px;font-weight:600;margin:0 0 16px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.small-multiples{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px}
+.small-multiples .cell{height:160px}
+.small-multiples .cell-title{font-size:13px;color:var(--muted);margin-bottom:4px}
 table{width:100%;border-collapse:collapse;font-size:13px}
 th{text-align:left;color:var(--muted);font-weight:500;padding:8px 12px;border-bottom:1px solid var(--border)}
 td{padding:8px 12px;border-bottom:1px solid var(--grid)}
@@ -46,10 +49,18 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}
 <div class="sub">2026/07–09 ・ 單位:新台幣千元 ・ 更新於 9/11</div>
 
 <div class="kpis">
+  <!-- 有上一期資料:才可以放 ▲▼ -->
   <div class="card">
     <div class="label">總營收</div>
     <div class="value">12,480</div>
     <div class="delta up">▲ 18.2% vs Q2</div>
+  </div>
+
+  <!-- 沒有上一期資料:灰字寫限定範圍的事實,不要編一個比較 -->
+  <div class="card">
+    <div class="label">交易筆數</div>
+    <div class="value">298</div>
+    <div class="delta flat">全月 30 天</div>
   </div>
   <!-- 3–5 張 -->
 </div>
@@ -83,6 +94,15 @@ const opts = {
 ```
 
 折線要收斂一點:`borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:0`(不要 spline,會扭曲數值)。長條 `borderRadius:4, barPercentage:.65`。
+
+**一頁多張圖時,把 `opts` 改成工廠函式**,不要共用同一個物件。Chart.js 會持有你傳進去的 options,之後改 A 圖的 `scales.y.max` 會連帶改到 B 圖:
+
+```js
+const baseOpts = () => ({ /* 同上 */ });
+const o = baseOpts(); o.scales.y.max = 100;   // 只影響這張
+```
+
+**small multiples**:每張小圖各自 `new Chart()`,但 `scales.y.max` 要**算好全體最大值後寫死同一個數**,不能讓它各自 autoscale。小圖不放軸標題和圖例,標題用 `.cell-title` 的純文字。
 
 ## 手寫 SVG 提醒
 
