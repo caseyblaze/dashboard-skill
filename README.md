@@ -28,7 +28,9 @@ dashboard/
 
 ## 安裝
 
-**Claude Code** —— clone 到 skills 目錄就生效,不用打包:
+### Claude Code
+
+clone 到 skills 目錄就生效,不用打包:
 
 ```bash
 git clone https://github.com/caseyblaze/dashboard-skill ~/.claude/skills/dashboard
@@ -36,16 +38,30 @@ git clone https://github.com/caseyblaze/dashboard-skill ~/.claude/skills/dashboa
 
 更新:`git -C ~/.claude/skills/dashboard pull`。要開新的 session 才會載入。
 
-目錄名建議就叫 `dashboard`,跟 `SKILL.md` 的 `name:` 對齊,之後找起來不會困惑。
+### Claude Desktop / claude.ai 網頁版
 
-**claude.ai 網頁版** —— 需要打包成 `.skill` 上傳:
+**先開權限。** Settings → Capabilities,把 **Code execution and file creation** 打開。沒開的話 skill 上傳得進去但不會動。
+
+打包:
 
 ```bash
 git clone https://github.com/caseyblaze/dashboard-skill dashboard
-zip -r dashboard.skill dashboard/ -x "*.git*"
+zip -r dashboard.zip dashboard/ -x "*.git*"
 ```
 
-上傳 `dashboard.skill`,點 Save skill。第二行的 `dashboard/` 是第一行 clone 出來的目錄名,兩行要對得起來。
+上傳:
+
+| | 路徑 |
+|---|---|
+| Claude Desktop | Settings → Capabilities → Skills → 上傳 `dashboard.zip` |
+| claude.ai 網頁版 | Customize → Skills → `+` → Create skill → Upload a skill |
+
+傳完確認清單裡那個開關是**開**的,然後**開一個新對話** —— skill 清單是在對話開始時載入的,已經開著的對話不會追加。
+
+**兩個最容易失敗的地方:**
+
+1. **zip 裡要包一層資料夾。** `SKILL.md` 不能躺在 zip 根目錄,要在 `dashboard/` 底下。上面的指令 zip 的是目錄本身,結構是對的。
+2. **資料夾名要跟 `SKILL.md` 的 `name:` 一致**,兩邊都是 `dashboard`。所以 clone 那行才要手動指定目錄名 —— 直接 `git clone <url>` 會得到 `dashboard-skill`,跟 `name: dashboard` 對不起來,上傳會被退件。
 
 ## 調整
 
