@@ -8,6 +8,15 @@ import matplotlib as mpl, matplotlib.pyplot as plt
 PALETTE = ['#2563EB','#0E9F6E','#F59E0B','#7C3AED','#DC6803','#64748B']
 INK, MUTED, GRID, DIM = '#101828', '#667085', '#EEF0F3', '#CBD5E1'
 POS, NEG = '#0E9F6E', '#DC2626'
+POS_TEXT = '#047857'      # POS 對白底只有 3.39:1,要寫字一律換這個(5.48:1)
+
+# 有序資料用漸層,不要拿 PALETTE 去畫
+SEQ = ['#DBEAFE','#93C5FD','#3B82F6','#1D4ED8','#1E3A8A']                    # 單向
+DIV = ['#B45309','#F59E0B','#FDE68A','#F1F5F9','#BFDBFE','#3B82F6','#1E40AF']  # 有中點
+
+from matplotlib.colors import LinearSegmentedColormap
+CMAP_SEQ = LinearSegmentedColormap.from_list('seq', SEQ)
+CMAP_DIV = LinearSegmentedColormap.from_list('div', DIV)   # 記得 vmin=-x, vmax=+x 對稱
 
 mpl.rcParams.update({
     'figure.facecolor':'white', 'axes.facecolor':'white',
@@ -105,6 +114,68 @@ fig.suptitle('六個站點裡只有南港在成長', x=.06, ha='left', fontsize=
 ```
 
 要凸顯其中一個就把它上 `PALETTE[0]`、其餘 `DIM`,並在每張小圖畫一條全體平均的灰虛線當共同基準。
+
+## 軸刻度的數字縮寫
+
+大數字不縮寫,y 軸會被 `12,480,000` 這種刻度撐爆。**一張圖只能用一種寫法。**
+
+```python
+import matplotlib.ticker as mticker
+
+def fmt_tw(v, _=None):                  # 中文報表:萬 / 億
+    for div, unit in ((1e8, '億'), (1e4, '萬')):
+        if abs(v) >= div:
+            return f'{v/div:,.1f}{unit}'
+    return f'{v:,.0f}'
+
+def fmt_en(v, _=None):                  # 技術指標 / 國際場合:K / M / B
+    for div, unit in ((1e9, 'B'), (1e6, 'M'), (1e3, 'K')):
+        if abs(v) >= div:
+            return f'{v/div:,.1f}{unit}'
+    return f'{v:,.0f}'
+
+ax.yaxis.set_major_formatter(mticker.FuncFormatter(fmt_tw))
+ax.set_ylabel('營收(新台幣)')          # 單位寫在軸標題,不要每個刻度都寫
+```
+
+## 誤差線與不確定性
+
+抽樣、預測、外推的數字只畫一個點,等於宣稱精確度比實際高。
+
+```python
+# 長條 + 誤差線
+ax.bar(d['name'], d['mean'], yerr=d['ci'], color=PALETTE[0],
+       error_kw={'ecolor': MUTED, 'elinewidth': 1, 'capsize': 3})
+
+# 折線 + 信賴區間 / 預測帶
+ax.plot(x, mu, lw=2, color=PALETTE[0])
+ax.fill_between(x, lo, hi, color=PALETTE[0], alpha=.15, linewidth=0)
+
+# 預測段落改虛線,跟實際值分開
+ax.plot(x_fcst, y_fcst, lw=2, ls='--', color=PALETTE[0])
+```
+
+樣本數小就標出來:`ax.text(..., f'n={n}', color=MUTED, fontsize=10)`。
+
+## 黑白與色盲
+
+六色色序的相對亮度是 紫 0.134 / 藍 0.153 / 灰 0.171 / 橘 0.251 / 綠 0.260 / 黃 0.439 —— 紫藍灰三個幾乎同色,橘綠只差 0.009。**印出來就分不出來。**
+
+所以多序列的圖,顏色之外一定要再給一個線索:
+
+```python
+STYLES = ['-', '--', ':', '-.']
+for i, (name, s) in enumerate(series.items()):
+    ax.plot(s.index, s.values, lw=2,
+            color=PALETTE[i], ls=STYLES[i % len(STYLES)])
+```
+
+檢查方式:存檔後轉灰階看還讀不讀得懂。
+
+```python
+from PIL import Image
+Image.open(path).convert('L').save(path.replace('.png', '-gray.png'))
+```
 
 ## 多圖拼成一張儀表板
 

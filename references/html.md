@@ -16,6 +16,7 @@
   --ink:#101828; --muted:#667085;
   --c1:#2563EB; --c2:#0E9F6E; --c3:#F59E0B; --c4:#7C3AED; --c5:#DC6803; --c6:#64748B;
   --pos:#0E9F6E; --neg:#DC2626; --dim:#CBD5E1;
+  --pos-text:#047857;   /* --pos 對白底只有 3.39:1,寫字一律用這個 */
 }
 *{box-sizing:border-box}
 body{margin:0;padding:24px;background:var(--bg);color:var(--ink);
@@ -27,7 +28,7 @@ h1{font-size:20px;font-weight:600;margin:0 0 4px}
 .card .label{font-size:13px;color:var(--muted);margin-bottom:6px}
 .card .value{font-size:28px;font-weight:600;letter-spacing:-.02em}
 .card .delta{font-size:13px;margin-top:6px}
-.up{color:var(--pos)} .down{color:var(--neg)} .flat{color:var(--muted)}
+.up{color:var(--pos-text)} .down{color:var(--neg)} .flat{color:var(--muted)}
 .panel{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:24px}
 .panel h2{font-size:15px;font-weight:600;margin:0 0 16px}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
@@ -103,6 +104,50 @@ const o = baseOpts(); o.scales.y.max = 100;   // 只影響這張
 ```
 
 **small multiples**:每張小圖各自 `new Chart()`,但 `scales.y.max` 要**算好全體最大值後寫死同一個數**,不能讓它各自 autoscale。小圖不放軸標題和圖例,標題用 `.cell-title` 的純文字。
+
+## 軸刻度的數字縮寫
+
+預設的 `toLocaleString()` 遇到大數字會把 y 軸撐爆。一張圖只能用一種寫法:
+
+```js
+const fmtTW = v => Math.abs(v) >= 1e8 ? (v/1e8).toFixed(1) + '億'
+               : Math.abs(v) >= 1e4 ? (v/1e4).toFixed(1) + '萬'
+               : v.toLocaleString();
+const fmtEN = v => Math.abs(v) >= 1e9 ? (v/1e9).toFixed(1) + 'B'
+               : Math.abs(v) >= 1e6 ? (v/1e6).toFixed(1) + 'M'
+               : Math.abs(v) >= 1e3 ? (v/1e3).toFixed(1) + 'K'
+               : v.toLocaleString();
+
+o.scales.y.ticks.callback = fmtTW;
+o.scales.y.title = { display:true, text:'營收(新台幣)', color:'#667085' };
+```
+
+Tooltip 裡要給完整數字,縮寫只用在刻度。
+
+## 多序列不要只靠顏色
+
+顏色之外要再給一個線索,折線用 `borderDash`:
+
+```js
+const DASH = [[], [6,4], [2,3], [8,3,2,3]];   // 實線 / 虛線 / 點線 / 點劃線
+datasets.forEach((d, i) => { d.borderDash = DASH[i % DASH.length]; });
+```
+
+## 無障礙
+
+- 圖的容器給 `role="img"` 和一句寫結論的 `aria-label`,不要寫「長條圖」:
+
+```html
+<div class="chart h-main" role="img"
+     aria-label="6/20 單日 121 筆,佔全月四成,其餘日期多在 20 筆以下">
+  <canvas id="daily"></canvas>
+</div>
+```
+
+  `<canvas>` 對讀螢幕的人是空白,沒有 `aria-label` 等於整張圖不存在。結論式標題已經寫好了,直接拿去用。
+
+- 明細表就是資料表備援,`<details>` 可以收合但不要藏。
+- 最小字級 13px,`--dim` (`#CBD5E1`,1.48:1) 只能填色不能寫字。
 
 ## 手寫 SVG 提醒
 
