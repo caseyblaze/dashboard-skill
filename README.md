@@ -28,13 +28,24 @@ dashboard/
 
 ## 安裝
 
-打包成 `.skill` 後在 Claude 裡安裝:
+**Claude Code** —— clone 到 skills 目錄就生效,不用打包:
 
 ```bash
-cd .. && zip -r dashboard.skill dashboard/ -x "*.git*"
+git clone https://github.com/caseyblaze/dashboard-skill ~/.claude/skills/dashboard
 ```
 
-把產出的 `dashboard.skill` 上傳到 Claude,點 Save skill。
+更新:`git -C ~/.claude/skills/dashboard pull`。要開新的 session 才會載入。
+
+目錄名建議就叫 `dashboard`,跟 `SKILL.md` 的 `name:` 對齊,之後找起來不會困惑。
+
+**claude.ai 網頁版** —— 需要打包成 `.skill` 上傳:
+
+```bash
+git clone https://github.com/caseyblaze/dashboard-skill dashboard
+zip -r dashboard.skill dashboard/ -x "*.git*"
+```
+
+上傳 `dashboard.skill`,點 Save skill。第二行的 `dashboard/` 是第一行 clone 出來的目錄名,兩行要對得起來。
 
 ## 調整
 
